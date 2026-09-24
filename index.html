@@ -21,16 +21,16 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .card { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         
-        /* سلايدر الصور */
-        .slider-container { position: relative; width: 100%; height: 280px; background: #eee; overflow: hidden; }
-        .slider-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        /* سلايدر الصور المربّع (أبعاد الإنستغرام) */
+        .slider-container { position: relative; width: 100%; aspect-ratio: 1 / 1; background: #fff; overflow: hidden; }
+        .slider-img { width: 100%; height: 100%; object-fit: contain; display: none; }
         .slider-img.active { display: block; }
         .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; padding: 8px 12px; cursor: pointer; font-size: 16px; border-radius: 4px; user-select: none; }
         .slider-btn.prev { right: 8px; }
         .slider-btn.next { left: 8px; }
         .slider-dots { position: absolute; bottom: 8px; width: 100%; text-align: center; }
-        .dot { height: 8px; width: 8px; margin: 0 3px; background-color: rgba(255,255,255,0.5); border-radius: 50%; display: inline-block; }
-        .dot.active { background-color: #fff; width: 10px; height: 10px; }
+        .dot { height: 8px; width: 8px; margin: 0 3px; background-color: rgba(0,0,0,0.3); border-radius: 50%; display: inline-block; }
+        .dot.active { background-color: #111; width: 10px; height: 10px; }
 
         .card-body { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; text-align: right; }
         .card-title { font-size: 17px; font-weight: bold; margin-bottom: 6px; }
@@ -72,7 +72,7 @@
             <div class="admin-form">
                 <input type="text" id="pName" placeholder="اسم المنتج (مثال: تيشيرت جيفارا)">
                 <input type="text" id="pPrice" placeholder="السعر (مثال: 15,000 د.ع)">
-                <input type="text" id="pImgs" placeholder="روابط الصور (ضع فاصلة بين كل رابط وروابط آخر)">
+                <input type="text" id="pImgs" placeholder="روابط الصور المباشرة (ضع فاصلة بين كل رابط وآخر)">
                 <select id="pType">
                     <option value="apparel">ملابس (يتطلب قياس S-4XL)</option>
                     <option value="accessory">إكسسوارات / معلقات (بدون قياس)</option>
@@ -150,16 +150,18 @@
         let isAdminLoggedIn = false;
         let whatsappNumber = localStorage.getItem('tahrir_wa') || "9647XXXXXXXXX";
 
-        let products = JSON.parse(localStorage.getItem('tahrir_products')) || [
-            { id: 1, name: "تيشيرت تشي جيفارا (أبيض)", price: "السعر خاص", imgs: ["https://via.placeholder.com/300x300/f0f0f0/111?text=Front", "https://via.placeholder.com/300x300/e0e0e0/111?text=Back"], hasSize: true },
-            { id: 2, name: "معلقة زجاجية روسية", price: "3,000 د.ع", imgs: ["https://via.placeholder.com/300x300/333/fff?text=Pendant"], hasSize: false }
-        ];
+        let products = JSON.parse(localStorage.getItem('tahrir_products')) || [];
 
         let sliderState = {};
 
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
             grid.innerHTML = '';
+
+            if (products.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #777;">لا توجد منتجات حالياً. قم بتسجيل الدخول كأدمن لإضافة المنتجات.</p>';
+                return;
+            }
 
             products.forEach(p => {
                 if (!sliderState[p.id]) sliderState[p.id] = 0;
@@ -218,7 +220,7 @@
                     document.getElementById('adminPanel').style.display = 'block';
                     document.getElementById('waNumInput').value = whatsappNumber;
                     renderProducts();
-                    alert("تم الدخول بنجاح! يمكنك الآن إضافة وحذف المنتجات.");
+                    alert("تم الدخول بنجاح!");
                 } else if (pwd !== null) {
                     alert("رمز الدخول غير صحيح!");
                 }
