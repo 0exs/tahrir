@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر تحرير - Tahrir Store</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f8f9fa; color: #212529; padding-bottom: 60px; }
+        
+        /* الهيدر */
+        header { background: #111; color: #fff; text-align: center; padding: 25px 15px; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        header h1 { font-size: 24px; margin-bottom: 5px; }
+        header p { font-size: 13px; color: #aaa; }
+        .admin-toggle-btn { position: absolute; left: 15px; top: 20px; background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .admin-toggle-btn:hover { background: #444; }
+
+        .container { max-width: 950px; margin: 25px auto; padding: 0 15px; }
+        
+        /* شبكة المنتجات */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .card { background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-4px); }
+        .card img { width: 100%; height: 260px; object-fit: cover; background: #eee; }
+        .card-body { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; text-align: right; }
+        .card-title { font-size: 17px; font-weight: bold; margin-bottom: 6px; }
+        .card-desc { font-size: 12px; color: #666; margin-bottom: 10px; min-height: 32px; }
+        .card-price { color: #d90429; font-size: 16px; font-weight: bold; margin-bottom: 12px; }
+        .card-actions { margin-top: auto; display: flex; gap: 8px; }
+        
+        .btn { background-color: #25D366; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; width: 100%; text-align: center; }
+        .btn:hover { background-color: #1eb855; }
+        .btn-delete { background-color: #ef233c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        /* لوحة التحكم (Admin Panel) */
+        .admin-panel { background: #fff; border: 2px dashed #25D366; border-radius: 12px; padding: 20px; margin-bottom: 30px; display: none; }
+        .admin-panel h2 { font-size: 18px; margin-bottom: 15px; color: #111; }
+        .admin-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px; }
+        .admin-form input, .admin-form select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
+        .admin-btn { background: #111; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; grid-column: 1 / -1; }
+
+        /* النافذة المنبثقة (Order Modal) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 420px; width: 100%; position: relative; }
+        .close-btn { position: absolute; left: 15px; top: 15px; font-size: 18px; cursor: pointer; border: none; background: none; font-weight: bold; }
+        .form-group { margin-bottom: 12px; text-align: right; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="admin-toggle-btn" onclick="toggleAdminLogin()">🔒 لوحة الأدمن</button>
+        <h1>متجر تحرير 🖤</h1>
+        <p>طباعة حرارية وتصاميم مميزة - توصيل لجميع المحافظات</p>
+    </header>
+
+    <div class="container">
+        <!-- لوحة تحكم الإدارة -->
+        <div class="admin-panel" id="adminPanel">
+            <h2>إضافة منتج جديد للمتجر ➕</h2>
+            <div class="admin-form">
+                <input type="text" id="pName" placeholder="اسم المنتج (مثال: تيشيرت جيفارا أبيض)">
+                <input type="text" id="pPrice" placeholder="السعر (مثال: 15,000 د.ع أو السعر خاص)">
+                <input type="text" id="pImg" placeholder="رابط صورة المنتج (URL)">
+                <select id="pType">
+                    <option value="apparel">ملابس (يتطلب قياس S-4XL)</option>
+                    <option value="accessory">إكسسوارات / معلقات (بدون قياس)</option>
+                </select>
+            </div>
+            <button class="admin-btn" onclick="addNewProduct()">إضافة المنتج فوراً 🚀</button>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <h2>إعدادات الحساب ⚙️</h2>
+            <div class="admin-form">
+                <input type="text" id="waNumInput" placeholder="رقم الواتساب (مثال: 9647XXXXXXXXX)">
+                <button class="admin-btn" style="background:#25D366" onclick="saveWaNumber()">حفظ رقم الواتساب 📲</button>
+            </div>
+        </div>
+
+        <!-- معرض المنتجات -->
+        <h2 style="font-size: 20px; margin-bottom: 15px; text-align: right;">المنتجات المتوفرة 🛒</h2>
+        <div class="grid" id="productsGrid">
+            <!-- المنتجات تتولد هنا عبر الجافاسكربت -->
+        </div>
+    </div>
+
+    <!-- نافذة طلب الزبون -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeOrderModal()">✕</button>
+            <h3 style="margin-bottom: 15px; text-align: center;">معلومات الطلب 📦</h3>
+            
+            <form id="orderForm" onsubmit="sendToWhatsApp(event)">
+                <input type="hidden" id="selectedProduct">
+
+                <div class="form-group">
+                    <label>الاسم الكامل:</label>
+                    <input type="text" id="custName" required placeholder="أدخل اسمك الثلاثي">
+                </div>
+
+                <div class="form-group" id="sizeGroup">
+                    <label>القياس المطلوب:</label>
+                    <select id="custSize">
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                        <option value="3XL">3XL</option>
+                        <option value="4XL">4XL</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>المحافظة:</label>
+                    <input type="text" id="custGov" required placeholder="مثال: بغداد، البصرة...">
+                </div>
+
+                <div class="form-group">
+                    <label>المنطقة / الحي:</label>
+                    <input type="text" id="custArea" required placeholder="أدخل منطقتك السكنية">
+                </div>
+
+                <div class="form-group">
+                    <label>أقرب نقطة دالة:</label>
+                    <input type="text" id="custLandmark" required placeholder="مثال: قرب جامع ... أو مقابل مكتبة ...">
+                </div>
+
+                <div class="form-group">
+                    <label>رقم هاتف الواتساب:</label>
+                    <input type="tel" id="custPhone" required placeholder="07XXXXXXXXX">
+                </div>
+
+                <button type="submit" class="btn" style="margin-top: 10px;">إرسال الطلب عبر الواتساب 📲</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // الرمز الافتراضي للأدمن
+        const ADMIN_PASS = "1234";
+        let isAdminLoggedIn = false;
+        let whatsappNumber = localStorage.getItem('tahrir_wa') || "9647XXXXXXXXX";
+
+        // المنتجات الافتراضية
+        let products = JSON.parse(localStorage.getItem('tahrir_products')) || [
+            { id: 1, name: "تيشيرت تشي جيفارا (أبيض)", price: "السعر خاص", img: "https://via.placeholder.com/300x300/f0f0f0/111?text=Che+Guevara", hasSize: true },
+            { id: 2, name: "معلقة زجاجية روسية", price: "3,000 د.ع", img: "https://via.placeholder.com/300x300/333/fff?text=Pendant", hasSize: false }
+        ];
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            products.forEach(p => {
+                grid.innerHTML += `
+                    <div class="card">
+                        <img src="${p.img}" alt="${p.name}">
+                        <div class="card-body">
+                            <div class="card-title">${p.name}</div>
+                            <div class="card-price">${p.price}</div>
+                            <div class="card-actions">
+                                <button class="btn" onclick="openOrderModal('${p.name}', ${p.hasSize})">طلب الآن 💬</button>
+                                ${isAdminLoggedIn ? `<button class="btn-delete" onclick="deleteProduct(${p.id})">حذف</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleAdminLogin() {
+            if (!isAdminLoggedIn) {
+                const pwd = prompt("أدخل رمز دخول الأدمن:");
+                if (pwd === ADMIN_PASS) {
+                    isAdminLoggedIn = true;
+                    document.getElementById('adminPanel').style.display = 'block';
+                    document.getElementById('waNumInput').value = whatsappNumber;
+                    renderProducts();
+                    alert("تم الدخول بنجاح! يمكنك الآن إضافة وحذف المنتجات.");
+                } else if (pwd !== null) {
+                    alert("رمز الدخول غير صحيح!");
+                }
+            } else {
+                document.getElementById('adminPanel').style.display = 'none';
+                isAdminLoggedIn = false;
+                renderProducts();
+            }
+        }
+
+        function addNewProduct() {
+            const name = document.getElementById('pName').value.trim();
+            const price = document.getElementById('pPrice').value.trim();
+            const img = document.getElementById('pImg').value.trim() || 'https://via.placeholder.com/300x300?text=No+Image';
+            const type = document.getElementById('pType').value;
+
+            if (!name || !price) {
+                alert("يرجى ملء اسم المنتج والسعر!");
+                return;
+            }
+
+            const newProd = {
+                id: Date.now(),
+                name: name,
+                price: price,
+                img: img,
+                hasSize: type === 'apparel'
+            };
+
+            products.push(newProd);
+            localStorage.setItem('tahrir_products', JSON.stringify(products));
+            renderProducts();
+
+            // تفريغ المدخلات
+            document.getElementById('pName').value = '';
+            document.getElementById('pPrice').value = '';
+            document.getElementById('pImg').value = '';
+            alert("تمت إضافة المنتج بنجاح! 🎉");
+        }
+
+        function deleteProduct(id) {
+            if (confirm("هل أنت تأكد من حذف هذا المنتج؟")) {
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('tahrir_products', JSON.stringify(products));
+                renderProducts();
+            }
+        }
+
+        function saveWaNumber() {
+            const num = document.getElementById('waNumInput').value.trim();
+            if (num) {
+                whatsappNumber = num;
+                localStorage.setItem('tahrir_wa', num);
+                alert("تم حفظ رقم الواتساب بنجاح! ✅");
+            }
+        }
+
+        function openOrderModal(productName, hasSize) {
+            document.getElementById('selectedProduct').value = productName;
+            document.getElementById('sizeGroup').style.display = hasSize ? 'block' : 'none';
+            document.getElementById('orderModal').style.display = 'flex';
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        function sendToWhatsApp(e) {
+            e.preventDefault();
+
+            const product = document.getElementById('selectedProduct').value;
+            const name = document.getElementById('custName').value;
+            const sizeGroup = document.getElementById('sizeGroup').style.display;
+            const size = sizeGroup !== 'none' ? document.getElementById('custSize').value : 'غير محدد (إكسسوار/معلقة)';
+            const gov = document.getElementById('custGov').value;
+            const area = document.getElementById('custArea').value;
+            const landmark = document.getElementById('custLandmark').value;
+            const phone = document.getElementById('custPhone').value;
+
+            let text = `*طلب جديد من متجر تحرير* 🛍️%0A%0A`;
+            text += `*المنتج:* ${product}%0A`;
+            if (sizeGroup !== 'none') text += `*القياس:* ${size}%0A`;
+            text += `------------------------%0A`;
+            text += `*اسم الزبون:* ${name}%0A`;
+            text += `*المحافظة:* ${gov}%0A`;
+            text += `*المنطقة:* ${area}%0A`;
+            text += `*أقرب نقطة دالة:* ${landmark}%0A`;
+            text += `*رقم الهاتف:* ${phone}`;
+
+            const url = `https://wa.me/${whatsappNumber}?text=${text}`;
+            window.open(url, '_blank');
+            closeOrderModal();
+        }
+
+        // تشغيل العرض الأولي
+        renderProducts();
+    </script>
+</body>
+</html>
